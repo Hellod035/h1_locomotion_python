@@ -10,18 +10,18 @@ import unitree_legged_const as h1
 def LowStateHandler(msg: LowState_):
     
     # print front right hip motor states
-    print("left_elbow_joint motor state: ", msg.motor_state[h1.ID["left_elbow_joint"]])
-    print("IMU state: ", msg.imu_state)
-    print("Battery state: voltage: ", msg.power_v, "current: ", msg.power_a)
+    # print("left_elbow_joint motor state: ", msg.motor_state[h1.ID["left_elbow_joint"]])
+    # print("right_elbow_joint motor state: ", msg.motor_state[h1.ID["right_elbow_joint"]])
+    for i in range(20):
+        print("motor state : ", i, msg.motor_state[i].q)
+    # print("IMU state: ", msg.imu_state)
+    # print("Battery state: voltage: ", msg.power_v, "current: ", msg.power_a)
 
 
 if __name__ == "__main__":
-    if len(sys.argv)>1:
-        ChannelFactoryInitialize(0, sys.argv[1])
-    else:
-        ChannelFactoryInitialize(0)
+    ChannelFactoryInitialize(0, "eno1")
     sub = ChannelSubscriber("rt/lowstate", LowState_)
     sub.Init(LowStateHandler, 10)
 
     while True:
-        time.sleep(10.0)
+        time.sleep(0.01)

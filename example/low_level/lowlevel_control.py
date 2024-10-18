@@ -22,10 +22,7 @@ def set_motor_cmd(motor, mode, q=0, kp=0, dq=0, kd=0, tau=0):
 
 if __name__ == '__main__':
 
-    if len(sys.argv)>1:
-        ChannelFactoryInitialize(0, sys.argv[1])
-    else:
-        ChannelFactoryInitialize(0)
+    ChannelFactoryInitialize(0, "eno1")
     # Create a publisher to publish the data defined in UserData class
     pub = ChannelPublisher("rt/lowcmd", LowCmd_)
     pub.Init()
@@ -42,17 +39,23 @@ if __name__ == '__main__':
     while True:        
         # Toque controle, set left_elbow_joint toque
         cmd.motor_cmd[h1.ID["left_elbow_joint"]].q = 0.0 # Set to stop position(rad)
-        cmd.motor_cmd[h1.ID["left_elbow_joint"]].kp = 0.0
+        cmd.motor_cmd[h1.ID["left_elbow_joint"]].kp = 10.0
         cmd.motor_cmd[h1.ID["left_elbow_joint"]].dq = 0.0 # Set to stop angular velocity(rad/s)
-        cmd.motor_cmd[h1.ID["left_elbow_joint"]].kd = 0.0
-        cmd.motor_cmd[h1.ID["left_elbow_joint"]].tau = 1.0 # target toque is set to 1N.m
+        cmd.motor_cmd[h1.ID["left_elbow_joint"]].kd = 1.0
+        cmd.motor_cmd[h1.ID["left_elbow_joint"]].tau = 0.0 # target toque is set to 1N.m
 
-        # Poinstion(rad) control, set right_elbow_joint rad
-        cmd.motor_cmd[h1.ID["right_elbow_joint"]].q = 0.0  # Taregt angular(rad)
-        cmd.motor_cmd[h1.ID["right_elbow_joint"]].kp = 10.0 # Poinstion(rad) control kp gain
-        cmd.motor_cmd[h1.ID["right_elbow_joint"]].dq = 0.0  # Taregt angular velocity(rad/ss)
-        cmd.motor_cmd[h1.ID["right_elbow_joint"]].kd = 1.0  # Poinstion(rad) control kd gain
-        cmd.motor_cmd[h1.ID["right_elbow_joint"]].tau = 0.0 # Feedforward toque 1N.m
+        # # Poinstion(rad) control, set right_elbow_joint rad
+        # cmd.motor_cmd[h1.ID["right_elbow_joint"]].q = 0.0  # Taregt angular(rad)
+        # cmd.motor_cmd[h1.ID["right_elbow_joint"]].kp = 10.0 # Poinstion(rad) control kp gain
+        # cmd.motor_cmd[h1.ID["right_elbow_joint"]].dq = 0.0  # Taregt angular velocity(rad/ss)
+        # cmd.motor_cmd[h1.ID["right_elbow_joint"]].kd = 1.0  # Poinstion(rad) control kd gain
+        # cmd.motor_cmd[h1.ID["right_elbow_joint"]].tau = 0.0 # Feedforward toque 1N.m
+
+        # cmd.motor_cmd[h1.ID["left_hip_pitch_joint"]].q = 0  # Taregt angular(rad)
+        # cmd.motor_cmd[h1.ID["left_hip_pitch_joint"]].kp = 10.0 # Poinstion(rad) control kp gain
+        # cmd.motor_cmd[h1.ID["left_hip_pitch_joint"]].dq = 0.0  # Taregt angular velocity(rad/ss)
+        # cmd.motor_cmd[h1.ID["left_hip_pitch_joint"]].kd = 1.0  # Poinstion(rad) control kd gain
+        # cmd.motor_cmd[h1.ID["left_hip_pitch_joint"]].tau = 0.0 # Feedforward toque 1N.m
         
         cmd.crc = crc.Crc(cmd)
 
@@ -62,4 +65,4 @@ if __name__ == '__main__':
         else:
             print("Waitting for subscriber.")
 
-        time.sleep(0.002) # 500Hz
+        time.sleep(0.02) # 50Hz
