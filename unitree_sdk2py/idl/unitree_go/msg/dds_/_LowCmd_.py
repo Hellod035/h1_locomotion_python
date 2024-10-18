@@ -22,19 +22,23 @@ import cyclonedds.idl.types as types
 @annotate.final
 @annotate.autoid("sequential")
 class LowCmd_(idl.IdlStruct, typename="unitree_go.msg.dds_.LowCmd_"):
-    head: types.array[types.uint8, 2]
-    level_flag: types.uint8
-    frame_reserve: types.uint8
-    sn: types.array[types.uint32, 2]
-    version: types.array[types.uint32, 2]
-    bandwidth: types.uint16
-    motor_cmd: types.array['unitree_sdk2py.idl.unitree_go.msg.dds_.MotorCmd_', 20]
-    bms_cmd: 'unitree_sdk2py.idl.unitree_go.msg.dds_.BmsCmd_'
-    wireless_remote: types.array[types.uint8, 40]
-    led: types.array[types.uint8, 12]
-    fan: types.array[types.uint8, 2]
+    head: types.array[types.uint8, 2] # 帧头，数据校验用（0xFE,0xEF）
+    level_flag: types.uint8 # 沿用的，但是目前不用
+    frame_reserve: types.uint8 # 沿用的，但是目前不用
+    sn: types.array[types.uint32, 2] # 沿用的，但是目前不用
+    version: types.array[types.uint32, 2] # 沿用的，但是目前不用
+    bandwidth: types.uint16 # 沿用的，但是目前不用
+    motor_cmd: types.array['unitree_sdk2py.idl.unitree_go.msg.dds_.MotorCmd_', 20] # 电机控制命令数据
+    bms_cmd: 'unitree_sdk2py.idl.unitree_go.msg.dds_.BmsCmd_' # 电池控制命令数据
+    wireless_remote: types.array[types.uint8, 40] # 保留，目前不用
+    led: types.array[types.uint8, 12] # 已经改为内部控制，目前不用
+    fan: types.array[types.uint8, 2] # 已经改为内部控制，目前不用
+
+    # &0xFE          自动充电打开              ,  |0x01       自动充电关闭
+    # &0xFD          19个电机的电源开关打开    ,  |0x02       19个电机的电源开关关闭
     gpio: types.uint8
-    reserve: types.uint32
-    crc: types.uint32
+    
+    reserve: types.uint32 # 保留位
+    crc: types.uint32 # 数据CRC校验用,为32crc校验用
 
 

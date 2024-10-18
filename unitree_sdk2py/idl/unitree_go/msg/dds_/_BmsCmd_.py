@@ -22,7 +22,7 @@ import cyclonedds.idl.types as types
 @annotate.final
 @annotate.autoid("sequential")
 class BmsCmd_(idl.IdlStruct, typename="unitree_go.msg.dds_.BmsCmd_"):
-    off: types.uint8
-    reserve: types.array[types.uint8, 3]
+    off: types.uint8 # 关闭电池：（命令：0xA5）
+    reserve: types.array[types.uint8, 3] # 保留
 
 

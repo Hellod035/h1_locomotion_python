@@ -22,16 +22,16 @@ import cyclonedds.idl.types as types
 @annotate.final
 @annotate.autoid("sequential")
 class MotorState_(idl.IdlStruct, typename="unitree_go.msg.dds_.MotorState_"):
-    mode: types.uint8
-    q: types.float32
-    dq: types.float32
-    ddq: types.float32
-    tau_est: types.float32
-    q_raw: types.float32
-    dq_raw: types.float32
-    ddq_raw: types.float32
-    temperature: types.uint8
-    lost: types.uint32
-    reserve: types.array[types.uint32, 2]
+    mode: types.uint8 # 电机控制模式（工作模式-> 0x01/0x0A ，stop模式（待机模式）-> 0x00。）
+    q: types.float32 # 关机反馈位置信息：默认为弧度值（可按照实际情况改为角度值），可按照实际数值显示（弧度值范围：-7 - +7，显示3位小数）
+    dq: types.float32 # 关节反馈速度
+    ddq: types.float32 # 关节反馈加速度
+    tau_est: types.float32 # 关节反馈力矩
+    q_raw: types.float32 # 沿用的，但是目前不用
+    dq_raw: types.float32 # 沿用的，但是目前不用
+    ddq_raw: types.float32 # 沿用的，但是目前不用
+    temperature: types.uint8 # 电机温度信息，可按照实际数值显示（范围：-100 - 150）
+    lost: types.uint32 # 电机丢包信息
+    reserve: types.array[types.uint32, 2] # 当前电机通信频率+电机错误标志位：（数组：0-电机错误标志位（范围：0-255，可按照实际数值显示），1-当前电机通信频率（范围：0-800，可按照实际数值显示））
 
 

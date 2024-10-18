@@ -22,14 +22,14 @@ import cyclonedds.idl.types as types
 @annotate.final
 @annotate.autoid("sequential")
 class BmsState_(idl.IdlStruct, typename="unitree_go.msg.dds_.BmsState_"):
-    version_high: types.uint8
-    version_low: types.uint8
-    status: types.uint8
-    soc: types.uint8
-    current: types.int32
-    cycle: types.uint16
-    bq_ntc: types.array[types.uint8, 2]
-    mcu_ntc: types.array[types.uint8, 2]
-    cell_vol: types.array[types.uint16, 15]
+    version_high: types.uint8 # 电池版本信息
+    version_low: types.uint8 # 电池版本信息
+    status: types.uint8 # 显示未开启电池、唤醒事件、电池预充电中、电池正常充电中、电池正常放电中、电池自放电中、电池存在警告、等待按键复位警告中、复位中这些状态
+    soc: types.uint8 # 电池电量信息（1% - 100%）
+    current: types.int32 # 充放电信息，正：代表充电，负：代表放电
+    cycle: types.uint16 # 电池循环次数
+    bq_ntc: types.array[types.uint8, 2] # 电池内部两个NTC的温度
+    mcu_ntc: types.array[types.uint8, 2] # 电池NTC数组
+    cell_vol: types.array[types.uint16, 15] # 单节电压
 
 

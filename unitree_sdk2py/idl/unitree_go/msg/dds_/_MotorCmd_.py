@@ -22,12 +22,12 @@ import cyclonedds.idl.types as types
 @annotate.final
 @annotate.autoid("sequential")
 class MotorCmd_(idl.IdlStruct, typename="unitree_go.msg.dds_.MotorCmd_"):
-    mode: types.uint8
-    q: types.float32
-    dq: types.float32
-    tau: types.float32
-    kp: types.float32
-    kd: types.float32
-    reserve: types.array[types.uint32, 3]
+    mode: types.uint8 # 电机控制模式
+    q: types.float32 # 关节目标位置
+    dq: types.float32 # 关节目标速度
+    tau: types.float32 # 关节目标力矩
+    kp: types.float32 # 关节刚度系数
+    kd: types.float32 # 关节阻尼系数
+    reserve: types.array[types.uint32, 3] # 保留位
 
 

@@ -22,27 +22,37 @@ import cyclonedds.idl.types as types
 @annotate.final
 @annotate.autoid("sequential")
 class LowState_(idl.IdlStruct, typename="unitree_go.msg.dds_.LowState_"):
-    head: types.array[types.uint8, 2]
-    level_flag: types.uint8
-    frame_reserve: types.uint8
-    sn: types.array[types.uint32, 2]
-    version: types.array[types.uint32, 2]
-    bandwidth: types.uint16
-    imu_state: 'unitree_sdk2py.idl.unitree_go.msg.dds_.IMUState_'
-    motor_state: types.array['unitree_sdk2py.idl.unitree_go.msg.dds_.MotorState_', 20]
-    bms_state: 'unitree_sdk2py.idl.unitree_go.msg.dds_.BmsState_'
-    foot_force: types.array[types.int16, 4]
-    foot_force_est: types.array[types.int16, 4]
-    tick: types.uint32
-    wireless_remote: types.array[types.uint8, 40]
+    head: types.array[types.uint8, 2] # 帧头，数据校验用（0xFE,0xEF）
+    level_flag: types.uint8 # 沿用的，但是目前不用
+    frame_reserve: types.uint8 # 沿用的，但是目前不用
+    sn: types.array[types.uint32, 2] # 已经改为文件存储形式，目前没用
+    version: types.array[types.uint32, 2] # 沿用的，但是目前不用
+    bandwidth: types.uint16 # 沿用的，但是目前不用
+    imu_state: 'unitree_sdk2py.idl.unitree_go.msg.dds_.IMUState_' # IMU数据信息
+    motor_state: types.array['unitree_sdk2py.idl.unitree_go.msg.dds_.MotorState_', 20] # 电机总数据
+    bms_state: 'unitree_sdk2py.idl.unitree_go.msg.dds_.BmsState_'# 电池总数据
+    foot_force: types.array[types.int16, 4] # 足端力
+    foot_force_est: types.array[types.int16, 4] # 沿用的，但是目前不用
+    tick: types.uint32 # 1ms计时用，按照1ms递增
+    wireless_remote: types.array[types.uint8, 40] # 遥控器原始数据
+
+    # &0x80 -  电机               超时标志          1-超时   0-正常
+    # &0x40 -  小Mcu              超时标志          1-超时   0-正常
+    # &0x20 -  遥控器             超时标志          1-超时   0-正常
+    # &0x10 -  电池               超时标志          1-超时   0-正常
+
+    # &0x04 -  自动充电           自动充电状态标志  1-不充电           0-充电
+    # &0x02 -  板载电流错误标志   错误标志          1-板载电流异常      0-正常
+    # &0x01 -  运控命令超时       超时标志          1-超时            0-正常
     bit_flag: types.uint8
-    adc_reel: types.float32
-    temperature_ntc1: types.uint8
-    temperature_ntc2: types.uint8
-    power_v: types.float32
-    power_a: types.float32
-    fan_frequency: types.array[types.uint16, 4]
-    reserve: types.uint32
-    crc: types.uint32
+
+    adc_reel: types.float32 # 卷线器电流（范围：0 - 3A）
+    temperature_ntc1: types.uint8 # 主板中心温度值（范围：-20 - 100℃）
+    temperature_ntc2: types.uint8 # 自动充电温度（范围：-20 - 100℃）
+    power_v: types.float32 # 此电压值为主板电压 -> 电池电压
+    power_a: types.float32 # 此电流值为主板电流 -> 电池电流
+    fan_frequency: types.array[types.uint16, 4] # 风扇转速（目前可按照实际数值显示0-10000）。（0-左后转速 , 1-右后转速，2-前转速，单位转/分钟）（堵转检测：3-&0x01：左后堵转 , &0x02：右后堵转，&0x04：前堵转）
+    reserve: types.uint32 # 保留位
+    crc: types.uint32 # 数据CRC校验用
 
 
