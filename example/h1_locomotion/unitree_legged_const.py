@@ -1,0 +1,22 @@
+ID = {
+    "right_hip_roll_joint": 0,
+    "right_hip_pitch_joint": 1,
+    "right_knee_joint": 2,
+    "left_hip_roll_joint": 3,
+    "left_hip_pitch_joint": 4,
+    "left_knee_joint": 5,
+    "torso_joint": 6,
+    "left_hip_yaw_joint": 7,
+    "right_hip_yaw_joint": 8,
+    "left_ankle_joint": 10,
+    "right_ankle_joint": 11,
+    "right_shoulder_pitch_joint": 12,
+    "right_shoulder_roll_joint": 13,
+    "right_shoulder_yaw_joint": 14,
+    "right_elbow_joint": 15,
+    "left_shoulder_pitch_joint": 16,
+    "left_shoulder_roll_joint": 17,
+    "left_shoulder_yaw_joint": 18,
+    "left_elbow_joint": 19,
+}
+
