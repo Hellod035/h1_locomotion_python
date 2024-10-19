@@ -2,6 +2,7 @@ import torch
 from pathlib import Path
 import time
 import sys
+import select
 
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelFactoryInitialize
 from unitree_sdk2py.core.channel import ChannelSubscriber, ChannelFactoryInitialize
@@ -31,7 +32,7 @@ class Locomotion:
     def __init__(self, model_path: Path):
         # init model
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = self.load_model(model_path, map_location=self.device)
+        self.model = self.load_model(model_path)
         self.obs = torch.zeros(1, 66, device=self.device)
 
         # init buffer
@@ -84,19 +85,7 @@ class Locomotion:
         self.cmd.head[1]=0xEF
         self.cmd.level_flag = 0xFF
         self.cmd.gpio = 0
-        # 检查h1.ID中是否存在所有需要的关节ID
-        required_joints = [
-            "right_hip_roll_joint", "left_hip_roll_joint", "left_hip_yaw_joint", "right_hip_yaw_joint",
-            "right_hip_pitch_joint", "right_knee_joint", "left_hip_pitch_joint", "left_knee_joint",
-            "torso_joint", "left_ankle_joint", "right_ankle_joint", "right_shoulder_pitch_joint",
-            "right_shoulder_roll_joint", "right_shoulder_yaw_joint", "right_elbow_joint",
-            "left_shoulder_pitch_joint", "left_shoulder_roll_joint", "left_shoulder_yaw_joint",
-            "left_elbow_joint"
-        ]
-        
-        for joint in required_joints:
-            if joint not in h1.ID:
-                print(f"warning: {joint} not in h1.ID")
+
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_roll_joint"]], 0x0A, kp=150.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_pitch_joint"]], 0x0A, kp=200.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_knee_joint"]], 0x0A, kp=200.0, kd=5.0)
@@ -108,14 +97,14 @@ class Locomotion:
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_yaw_joint"]], 0x0A, kp=150.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_ankle_joint"]], 0x01, kp=20.0, kd=4.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_ankle_joint"]], 0x01, kp=20.0, kd=4.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_roll_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_elbow_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_roll_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_elbow_joint"]], 0x01, kp=40.0, kd=10.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_roll_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_elbow_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_roll_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_elbow_joint"]], 0x01, kp=40.0, kd=5.0)
         self.cmd.crc = self.crc.Crc(self.cmd)
 
     class obs_scales:
@@ -183,7 +172,8 @@ class Locomotion:
         self.obs[0, 47:66] = self.actions
         self.obs = torch.clip(self.obs, -100.0, 100.0)
 
-        actions = self.model(self.obs).detach()
+        actions = self.model(self.obs.detach())
+        # print(actions)
         actions = torch.clip(actions, -10.0, 10.0)
         self.actions = actions
 
@@ -194,20 +184,58 @@ class Locomotion:
 
         self.cmd.crc = self.crc.Crc(self.cmd)
 
+    def prepare_init_pose_commands(self):
+        for i in range(20):
+            self.dof_pos[0, i] = self.low_state.motor_state[i].q
+
+        actions_to_commands = self.dof_reindex_to_lowcmd(self.default_dof_pos)
+
+        for i in range(20):
+            current_angle = self.dof_pos[0, i].item()
+            target_angle = actions_to_commands[0, i].item()
+            angle_diff = target_angle - current_angle
+            
+            if i<9:
+                new_angle = current_angle + 0.75 * angle_diff
+            elif i==10 or i==11:
+                new_angle = target_angle
+            else:
+                new_angle = current_angle + 0.5 * angle_diff
+            
+            self.cmd.motor_cmd[i].q = new_angle
+
+        self.cmd.crc = self.crc.Crc(self.cmd)
+
 
 if __name__ == '__main__':
     # load model
     model_path = Path(__file__).parent / 'locomotion.pt'
     locomotion = Locomotion(model_path)
+    
+    init_pose_mode = True  # 初始状态为准备初始姿势
+    print("按空格键加回车切换到正常运动模式")
+
     while True:
         start_time = time.time()
-        locomotion.prepare_commands()
+        
+        if init_pose_mode:
+            locomotion.prepare_init_pose_commands()
+        else:
+            # locomotion.prepare_commands()
+
+            pass
+
         for i in range(20):
             print(i, locomotion.cmd.motor_cmd[i].q)
+        
+        locomotion.publish_cmd()
 
-        # locomotion.publish_cmd()
+        # 检查是否有输入
+        if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+            key = sys.stdin.read(1)
+            if key == ' ':
+                init_pose_mode = False
+                print("切换到正常运动模式")
 
         if (time.time() - start_time) < 0.02:
             time.sleep(0.02 - (time.time() - start_time))
-        
-

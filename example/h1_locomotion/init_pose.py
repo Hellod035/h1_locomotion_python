@@ -31,7 +31,7 @@ class Locomotion:
     def __init__(self, model_path: Path):
         # init model
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = self.load_model(model_path, map_location=self.device)
+        self.model = self.load_model(model_path)
         self.obs = torch.zeros(1, 66, device=self.device)
 
         # init buffer
@@ -42,9 +42,27 @@ class Locomotion:
         self.projected_gravity = torch.zeros(1, 3, device=self.device, requires_grad=False)
         self.dof_pos = torch.zeros(1, 20, device=self.device, requires_grad=False)
         self.dof_vel = torch.zeros(1, 20, device=self.device, requires_grad=False)
-        self.default_dof_pos = torch.tensor([[ 0.0000,  0.0000, -0.2800,  0.7900, -0.5200,  0.0000,  0.0000, -0.2800,
-          0.7900, -0.5200,  0.0000,  0.2800,  0.0000,  0.0000, -0.2000,  0.2800,
-          0.0000,  0.0000, -0.2000]], device=self.device, requires_grad=False)
+        self.default_dof_pos = torch.tensor([[ 
+            0.0000, # left_hip_yaw_joint
+            0.0000, # left_hip_roll_joint
+            -0.2800, # left_hip_pitch_joint
+            0.7900, # left_knee_joint
+            -0.5200, # left_ankle_joint
+            0.0000, # right_hip_yaw_joint
+            0.0000, # right_hip_roll_joint
+            -0.2800, # right_hip_pitch_joint
+            0.7900, # right_knee_joint
+            -0.5200, # right_ankle_joint
+            0.0000, # torso_joint
+            0.2800, # left_shoulder_pitch_joint
+            0.0000, # left_shoulder_roll_joint
+            0.0000, # left_shoulder_yaw_joint
+            -0.2000, # left_elbow_joint
+            0.2800, # right_shoulder_pitch_joint
+            0.0000, # right_shoulder_roll_joint
+            0.0000, # right_shoulder_yaw_joint
+            -0.2000 # right_elbow_joint
+            ]], device=self.device, requires_grad=False)
         self.dof_names = list(h1.ID.keys())
         self.actions = torch.zeros(1, 19, device=self.device, requires_grad=False)
 
@@ -67,18 +85,6 @@ class Locomotion:
         self.cmd.level_flag = 0xFF
         self.cmd.gpio = 0
         # 检查h1.ID中是否存在所有需要的关节ID
-        required_joints = [
-            "right_hip_roll_joint", "left_hip_roll_joint", "left_hip_yaw_joint", "right_hip_yaw_joint",
-            "right_hip_pitch_joint", "right_knee_joint", "left_hip_pitch_joint", "left_knee_joint",
-            "torso_joint", "left_ankle_joint", "right_ankle_joint", "right_shoulder_pitch_joint",
-            "right_shoulder_roll_joint", "right_shoulder_yaw_joint", "right_elbow_joint",
-            "left_shoulder_pitch_joint", "left_shoulder_roll_joint", "left_shoulder_yaw_joint",
-            "left_elbow_joint"
-        ]
-        
-        for joint in required_joints:
-            if joint not in h1.ID:
-                print(f"warning: {joint} not in h1.ID")
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_roll_joint"]], 0x0A, kp=150.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_pitch_joint"]], 0x0A, kp=200.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_knee_joint"]], 0x0A, kp=200.0, kd=5.0)
@@ -90,14 +96,14 @@ class Locomotion:
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_yaw_joint"]], 0x0A, kp=150.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_ankle_joint"]], 0x01, kp=20.0, kd=4.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_ankle_joint"]], 0x01, kp=20.0, kd=4.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_roll_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_elbow_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_roll_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=10.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_elbow_joint"]], 0x01, kp=40.0, kd=10.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_roll_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_elbow_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_roll_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_elbow_joint"]], 0x01, kp=40.0, kd=5.0)
         self.cmd.crc = self.crc.Crc(self.cmd)
 
     class obs_scales:
@@ -138,7 +144,7 @@ class Locomotion:
         dof[:, 9] = 0
         return dof
 
-    def prepare_commands(self):
+    def prepare_init_pose_commands(self):
         for i in range(20):
             self.dof_pos[0, i] = self.low_state.motor_state[i].q
 
@@ -149,8 +155,12 @@ class Locomotion:
             target_angle = actions_to_commands[0, i].item()
             angle_diff = target_angle - current_angle
             
-            k = 0.05
-            new_angle = current_angle + k * angle_diff
+            if i<9:
+                new_angle = current_angle + 0.75 * angle_diff
+            elif i==10 or i==11:
+                new_angle = target_angle
+            else:
+                new_angle = current_angle + 0.5 * angle_diff
             
             self.cmd.motor_cmd[i].q = new_angle
 
@@ -162,13 +172,12 @@ if __name__ == '__main__':
     locomotion = Locomotion(model_path)
     while True:
         start_time = time.time()
-        locomotion.prepare_commands()
+        locomotion.prepare_init_pose_commands()
         for i in range(20):
             print(i, locomotion.cmd.motor_cmd[i].q)
 
-        # locomotion.publish_cmd()
+        locomotion.publish_cmd()
 
-        if (time.time() - start_time) < 0.02:
-            time.sleep(0.02 - (time.time() - start_time))
+        # time.sleep(0.02)
         
 
