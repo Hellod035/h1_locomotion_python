@@ -37,12 +37,12 @@ if __name__ == '__main__':
     [set_motor_cmd(cmd.motor_cmd[i], 0x01) for i in range(10, 20)]
 
     while True:  
-        id = 10
+        id = 19
         # Toque controle, set left_elbow_joint toque
         cmd.motor_cmd[id].q = -0.0 # Set to stop position(rad)
-        cmd.motor_cmd[id].kp = 20
+        cmd.motor_cmd[id].kp = 10
         cmd.motor_cmd[id].dq = 0.0 # Set to stop angular velocity(rad/s)
-        cmd.motor_cmd[id].kd = 4
+        cmd.motor_cmd[id].kd = 1
         cmd.motor_cmd[id].tau = 0.0 # target toque is set to 1N.m
 
         # # Poinstion(rad) control, set right_elbow_joint rad

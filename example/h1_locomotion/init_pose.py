@@ -13,7 +13,7 @@ from unitree_sdk2py.idl.default import unitree_go_msg_dds__LowState_
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import LowState_
 from unitree_sdk2py.utils.crc import CRC
 import unitree_legged_const as h1
-
+import warnings
 DEBUG_MODE = True
 
 def quat_rotate_inverse(q, v):
@@ -45,23 +45,23 @@ class Locomotion:
         self.default_dof_pos = torch.tensor([[ 
             0.0000, # left_hip_yaw_joint
             0.0000, # left_hip_roll_joint
-            -0.2800, # left_hip_pitch_joint
-            0.7900, # left_knee_joint
-            -0.5200, # left_ankle_joint
+            -0.4000, # left_hip_pitch_joint
+            0.8000, # left_knee_joint
+            -0.4000, # left_ankle_joint
             0.0000, # right_hip_yaw_joint
             0.0000, # right_hip_roll_joint
-            -0.2800, # right_hip_pitch_joint
-            0.7900, # right_knee_joint
-            -0.5200, # right_ankle_joint
+            -0.4000, # right_hip_pitch_joint
+            0.8000, # right_knee_joint
+            -0.4000, # right_ankle_joint
             0.0000, # torso_joint
-            0.2800, # left_shoulder_pitch_joint
+            0.0000, # left_shoulder_pitch_joint
             0.0000, # left_shoulder_roll_joint
             0.0000, # left_shoulder_yaw_joint
-            -0.2000, # left_elbow_joint
-            0.2800, # right_shoulder_pitch_joint
+            -0.0000, # left_elbow_joint
+            0.0000, # right_shoulder_pitch_joint
             0.0000, # right_shoulder_roll_joint
             0.0000, # right_shoulder_yaw_joint
-            -0.2000 # right_elbow_joint
+            -0.0000 # right_elbow_joint
             ]], device=self.device, requires_grad=False)
         self.dof_names = list(h1.ID.keys())
         self.actions = torch.zeros(1, 19, device=self.device, requires_grad=False)
@@ -84,26 +84,25 @@ class Locomotion:
         self.cmd.head[1]=0xEF
         self.cmd.level_flag = 0xFF
         self.cmd.gpio = 0
-        # 检查h1.ID中是否存在所有需要的关节ID
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_roll_joint"]], 0x0A, kp=150.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_roll_joint"]], 0x0A, kp=200.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_pitch_joint"]], 0x0A, kp=200.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_knee_joint"]], 0x0A, kp=200.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_hip_roll_joint"]], 0x0A, kp=150.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_hip_roll_joint"]], 0x0A, kp=200.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_hip_pitch_joint"]], 0x0A, kp=200.0, kd=5.0)
         self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_knee_joint"]], 0x0A, kp=200.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["torso_joint"]], 0x0A, kp=200.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_hip_yaw_joint"]], 0x0A, kp=150.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_yaw_joint"]], 0x0A, kp=150.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_ankle_joint"]], 0x01, kp=20.0, kd=4.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_ankle_joint"]], 0x01, kp=20.0, kd=4.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_roll_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_elbow_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_pitch_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_roll_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_yaw_joint"]], 0x01, kp=40.0, kd=5.0)
-        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_elbow_joint"]], 0x01, kp=40.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["torso_joint"]], 0x0A, kp=300.0, kd=6.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_hip_yaw_joint"]], 0x0A, kp=200.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_hip_yaw_joint"]], 0x0A, kp=200.0, kd=5.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_ankle_joint"]], 0x01, kp=40.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_ankle_joint"]], 0x01, kp=40.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_pitch_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_roll_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_shoulder_yaw_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["right_elbow_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_pitch_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_roll_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_shoulder_yaw_joint"]], 0x01, kp=100.0, kd=2.0)
+        self.set_motor_cmd(self.cmd.motor_cmd[h1.ID["left_elbow_joint"]], 0x01, kp=100.0, kd=2.0)
         self.cmd.crc = self.crc.Crc(self.cmd)
 
     class obs_scales:
@@ -155,12 +154,10 @@ class Locomotion:
             target_angle = actions_to_commands[0, i].item()
             angle_diff = target_angle - current_angle
             
-            if i<9:
-                new_angle = current_angle + 0.75 * angle_diff
-            elif i==10 or i==11:
-                new_angle = target_angle
+            if i < 9:
+                new_angle = current_angle + 0.3 * angle_diff
             else:
-                new_angle = current_angle + 0.5 * angle_diff
+                new_angle = current_angle + 0.1 * angle_diff
             
             self.cmd.motor_cmd[i].q = new_angle
 
@@ -170,14 +167,14 @@ if __name__ == '__main__':
     # load model
     model_path = Path(__file__).parent / 'locomotion.pt'
     locomotion = Locomotion(model_path)
+
     while True:
         start_time = time.time()
         locomotion.prepare_init_pose_commands()
         for i in range(20):
             print(i, locomotion.cmd.motor_cmd[i].q)
-
         locomotion.publish_cmd()
 
-        # time.sleep(0.02)
+        time.sleep(0.02)
         
 
