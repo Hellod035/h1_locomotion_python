@@ -1,5 +1,5 @@
-# unitree_sdk2_python
-Python interface for unitree sdk2
+# Python RL deployment of unitree h1 humanoid robot
+Based on unitree_sdk2_python.
 
 # Installation
 ## Dependencies
@@ -7,13 +7,14 @@ Python interface for unitree sdk2
 - cyclonedds == 0.10.2
 - numpy
 - opencv-python
+- torch
 ## Install unitree_sdk2_python
 Execute the following commands in the terminal:
 ```bash
 cd ~
 sudo apt install python3-pip
-git clone https://github.com/unitreerobotics/unitree_sdk2_python.git
-cd unitree_sdk2_python
+git clone https://github.com/hellod035/h1_locomotion_python.git
+cd h1_locomotion_python
 pip3 install -e .
 ```
 ## FAQ
@@ -50,6 +51,10 @@ Open a new terminal and execute:
 python3 ./example/helloworld/subscriber.py
 ```
 You will see the data output in the terminal. The data structure transmitted between `publisher.py` and `subscriber.py` is defined in `user_data.py`, and users can define the required data structure as needed.
+## Unitree H1 Humanoid Robot RL Deployment
+```bash
+python3 ./example/h1_locomotion/h12real.py
+```
 ## High-Level Status and Control
 The high-level interface maintains consistency with unitree_sdk2 in terms of data structure and control methods. For detailed information, refer to https://support.unitree.com/home/en/developer/sports_services.
 ### High-Level Status
