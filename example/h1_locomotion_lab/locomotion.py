@@ -62,30 +62,29 @@ class Locomotion:
         self.cmd_buffer = DataBuffer()
         self.gravity_vec = np.array([0.0, 0.0, -1.0])
         self.commands = np.zeros((1, 3))
-        self.commands_scale = np.array([self.obs_scales.lin_vel, self.obs_scales.lin_vel, self.obs_scales.ang_vel])
         self.projected_gravity = np.zeros((1, 3))
         self.dof_pos = np.zeros((1, 20))
         self.dof_vel = np.zeros((1, 20))
-        self.default_dof_pos = np.array([[ 
-            0.0000, # left_hip_yaw_joint
-            0.0000, # left_hip_roll_joint
-            -0.4000, # left_hip_pitch_joint
-            0.8000, # left_knee_joint
-            -0.4000, # left_ankle_joint
-            0.0000, # right_hip_yaw_joint
-            0.0000, # right_hip_roll_joint
-            -0.4000, # right_hip_pitch_joint
-            0.8000, # right_knee_joint
-            -0.4000, # right_ankle_joint
-            0.0000, # torso_joint
-            0.0000, # left_shoulder_pitch_joint
-            0.0000, # left_shoulder_roll_joint
-            0.0000, # left_shoulder_yaw_joint
-            0.0000, # left_elbow_joint
-            0.0000, # right_shoulder_pitch_joint
-            0.0000, # right_shoulder_roll_joint
-            0.0000, # right_shoulder_yaw_joint
-            0.0000 # right_elbow_joint
+        self.default_dof_pos = np.array([[
+            0.0000, # left_hip_yaw
+            0.0000, # right_hip_yaw
+            0.0000, # torso
+            0.0000, # left_hip_roll
+            0.0000, # right_hip_roll
+            0.0000, # left_shoulder_pitch
+            0.0000, # right_shoulder_pitch
+            -0.4000, # left_hip_pitch
+            -0.4000, # right_hip_pitch
+            0.0000, # left_shoulder_roll
+            0.0000, # right_shoulder_roll
+            0.8000, # left_knee
+            0.8000, # right_knee
+            0.0000, # left_shoulder_yaw
+            0.0000, # right_shoulder_yaw
+            -0.4000, # left_ankle
+            -0.4000, # right_ankle
+            0.0000, # left_elbow
+            0.0000, # right_elbow
             ]])
         self.dof_names = list(h1.ID.keys())
         self.actions = np.zeros((1, 19))
@@ -131,12 +130,6 @@ class Locomotion:
         self.last_write_time = None
         self.last_control_time = None
 
-    class obs_scales:
-        lin_vel = 2.0
-        ang_vel = 0.25
-        dof_pos = 1.0
-        dof_vel = 0.05
-
     def set_motor_cmd(self, motor, mode, q=0.0, kp=0.0, dq=0.0, kd=0.0, tau=0.0):
         motor.mode = mode
         motor.q = q
@@ -154,12 +147,12 @@ class Locomotion:
         self.low_state_buffer.set_data(msg)
 
     def dof_reindex_to_model(self, input_dofs):  # input[1:20] output[1:19]
-        indices = np.array([7, 3, 4, 5, 10, 8, 0, 1, 2, 11, 6, 16, 17, 18, 19, 12, 13, 14, 15])
+        indices = np.array([7, 8, 6, 3, 0, 16, 12, 4, 1, 17, 13, 5, 2, 18, 14, 10, 11, 19, 15])
         dof = input_dofs[:, indices]
         return dof
 
     def dof_reindex_to_lowcmd(self, input_dofs):  # input[1:19] output[1:20]
-        indices = np.array([6, 7, 8, 1, 2, 3, 10, 0, 5, 4, 9, 15, 16, 17, 18, 11, 12, 13, 14])
+        indices = np.array([4, 8, 12, 3, 7, 11, 2, 0, 1, 15, 16, 6, 10, 14, 18, 5, 9, 13, 17])
         dof = np.zeros((input_dofs.shape[0], 20))
         dof[:, :9] = input_dofs[:, indices[:9]]
         dof[:, 10:] = input_dofs[:, indices[9:]]
@@ -170,7 +163,7 @@ class Locomotion:
 
         gyro_data = np.empty(3)
         quaternion = np.empty(4)
-        motor_data = np.empty((20, 2))  # 用于同时存储q和dq
+        motor_data = np.empty((20, 2))
 
         gyro_data[:] = low_state.imu_state.gyroscope
         quaternion[:] = low_state.imu_state.quaternion
@@ -180,7 +173,7 @@ class Locomotion:
             motor_data[i, 1] = low_state.motor_state[i].dq
 
         # ang_vel [0:3]
-        self.obs[0, 0:3] = gyro_data * self.obs_scales.ang_vel
+        self.obs[0, 0:3] = gyro_data
 
         # projected_gravity [3:6]
         q = np.concatenate([quaternion[1:], quaternion[:1]]).reshape(1, -1)
@@ -188,7 +181,7 @@ class Locomotion:
         self.obs[0, 3:6] = self.projected_gravity
 
         # commands [6:9]
-        self.obs[0, 6:9] = self.commands * self.commands_scale
+        self.obs[0, 6:9] = self.commands
 
         # dof pos [9:28] 和 dof vel [28:47]
         self.dof_pos[0] = motor_data[:, 0]
@@ -197,8 +190,8 @@ class Locomotion:
         dof_pos = self.dof_reindex_to_model(self.dof_pos)
         dof_vel = self.dof_reindex_to_model(self.dof_vel)
 
-        self.obs[0, 9:28] = (dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos
-        self.obs[0, 28:47] = dof_vel * self.obs_scales.dof_vel
+        self.obs[0, 9:28] = dof_pos - self.default_dof_pos
+        self.obs[0, 28:47] = dof_vel
 
         # last actions [47:66]
         self.obs[0, 47:66] = self.actions
@@ -222,7 +215,6 @@ class Locomotion:
         self.cmd.crc = self.crc.Crc(self.cmd)
 
         self.cmd_buffer.set_data(copy.deepcopy(self.cmd))
-        # print(time.time() - start_time)
 
     def prepare_init_pose_commands(self):
         low_state = copy.deepcopy(self.low_state_buffer.get_data())
@@ -285,7 +277,7 @@ class Locomotion:
 
 if __name__ == '__main__':
 
-    model_path = Path(__file__).parent / 'locomotion.pt'
+    model_path = Path(__file__).parent / 'policy.pt'
     locomotion = Locomotion(model_path)
     
     print("Switch to init pose mode")
