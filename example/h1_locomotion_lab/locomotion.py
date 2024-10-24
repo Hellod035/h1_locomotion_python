@@ -292,11 +292,11 @@ if __name__ == '__main__':
                 print("Switch to locomotion mode : Stand !")
             if key == 'f':
                 locomotion.init_pose_mode = False
-                locomotion.commands[:,0] = 0.6
+                locomotion.commands[:,0] = 0.4
                 print("Switch to locomotion mode : Forward !")
             if key == 'b':
                 locomotion.init_pose_mode = False
-                locomotion.commands[:,0] = -0.6
+                locomotion.commands[:,0] = -0.4
                 print("Switch to locomotion mode : Backward !")
             time.sleep(0.1)
 
